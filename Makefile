@@ -105,3 +105,5 @@ clean:
 	-rm -r build
 
 ci: check coverage
+
+include buildroot.mk
