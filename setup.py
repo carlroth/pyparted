@@ -45,16 +45,22 @@ if python_version < need_python_version:
 # http://code.activestate.com/recipes/502261-python-distutils-pkg-config/
 def pkgconfig(*packages, **kwargs):
     flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
-    for token in subprocess.check_output(["pkg-config", "--libs", "--cflags"] + list(packages)).decode('utf-8').split():
+    try:
+        for token in subprocess.check_output(["pkg-config", "--libs", "--cflags"] + list(packages)).decode('utf-8').split():
 
-        kwargs.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+            kwargs.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+    except subprocess.CalledProcessError:
+        pass
     return kwargs
 
 def check_mod_version(module, version):
-    modversion = subprocess.check_output(["pkg-config", "--modversion", module])
-    if not LooseVersion(modversion) >= LooseVersion(version):
-        sys.stderr.write("*** Minimum required %s version: %s, found: %s\n" % (module, version, modversion,))
-        sys.exit(1)
+    try:
+        modversion = subprocess.check_output(["pkg-config", "--modversion", module])
+        if not LooseVersion(modversion) >= LooseVersion(version):
+            sys.stderr.write("*** Minimum required %s version: %s, found: %s\n" % (module, version, modversion,))
+            sys.exit(1)
+    except subprocess.CalledProcessError:
+        pass
     return
 
 check_mod_version('libparted', need_libparted_version)
